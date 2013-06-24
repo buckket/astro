@@ -56,28 +56,28 @@ class LightController(threading.Thread):
         self.set_color(color)
 
     def flash(self):
-        oldColor = self.get_color()
-        if oldColor == [0, 0, 0]:
+        old_color = self.get_color()
+        if old_color == [0, 0, 0]:
             color = [255, 255, 255]
         else:
             color = [0, 0, 0]
         for i in range(0, 1):
             self.fade(color)
-            self.fade(oldColor)
+            self.fade(old_color)
 
     def execute_task(self, command, args, answer):
         if command == 'set_color':
-            self.logger.info('Setting color to: R: %s G: %s B: %s' % (args['color'][0], args['color'][1], args['color'][2]))
+            self.logger.info('Setting color to: R: %s G: %s B: %s' % args['color'])
             self.set_color(args['color'])
             answer(0)
 
         elif command == 'get_color':
             color = self.get_color()
-            self.logger.info('Reading current color: R: %s G: %s B: %s' %(color[0], color[1], color[2]))
+            self.logger.info('Reading current color: R: %s G: %s B: %s' % color)
             answer(0, color)
 
         elif command == 'fade':
-            self.logger.info('Fading color to: R: %s G: %s B: %s' % (args['color'][0], args['color'][1], args['color'][2]))
+            self.logger.info('Fading color to: R: %s G: %s B: %s' % args['color'])
             self.fade(args['color'])
             answer(0)
 
