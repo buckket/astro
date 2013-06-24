@@ -1,0 +1,16 @@
+[network]
+host        = 0.0.0.0
+port        = 9999
+key         = totalsicher
+
+[temp]
+w1_device   = /sys/bus/w1/devices/1/w1_slave
+xivley_url  = https://api.xively.com/v2/feeds/1/datastreams/temp
+xivley_key  = abcdef
+period      = 60.0
+
+[light]
+red         = ehrpwm.2:0
+green       = ehrpwm.2:1
+blue        = ehrpwm.1:0
+frequency   = 2000000
