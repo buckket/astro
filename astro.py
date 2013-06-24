@@ -51,6 +51,7 @@ class UDPHandler(SocketServer.BaseRequestHandler):
                 elif task == 'light':
                     light.queue.put(((command, args), answer))
                 else:
+                    logger.warn('invalid task: %s', task)
                     answer(1, 'invalid task')
 
             else:
