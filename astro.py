@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 
 from astro.logger import setup_logger
+
 from astro.config import setup_config
+from astro.config import temp_config_helper
+from astro.config import light_config_helper
+from astro.config import server_config_helper
 
 from astro.server import AstroUDPServer, AstroUDPHandler
 
@@ -22,27 +26,19 @@ def main():
         return
 
     logger.info('Initializing TempController')
-    w1_device = cfg.get('temp', 'w1_device')
-    xivley = {'apikey': cfg.get('temp', 'xivley_key'), 'url': cfg.get('temp', 'xivley_url')}
-    period = cfg.getfloat('temp', 'period')
-    temp = TempController(w1_device=w1_device, xivley=xivley, period=period)
+    temp = TempController(**temp_config_helper(cfg))
 
     logger.info('Initializing RadioController')
     radio = RadioController()
 
     logger.info('Initializing LightController')
-    red = cfg.get('light', 'red')
-    green = cfg.get('light', 'green')
-    blue = cfg.get('light', 'blue')
-    frequency = cfg.getint('light', 'frequency')
-    light = LightController(red=red, green=green, blue=blue, frequency=frequency)
+    light = LightController(**light_config_helper(cfg))
 
     logger.info('Initializing UDPServer')
-    host = cfg.get('network', 'host')
-    port = cfg.getint('network', 'port')
-    key = cfg.get('network', 'key')
-    server = AstroUDPServer((host, port), AstroUDPHandler, key=key, temp=temp, radio=radio, light=light)
-    logger.info('Socket bound to %s:%i', host, port)
+    server_config = server_config_helper(cfg)
+    server = AstroUDPServer((server_config['host'], server_config['port']),
+        AstroUDPHandler, key=server_config['key'], temp=temp, radio=radio, light=light)
+    logger.info('Socket bound to %s:%i', server_config['host'], server_config['port'])
 
     try:
         logger.info('Starting TempController')
