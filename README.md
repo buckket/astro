@@ -7,6 +7,7 @@ Extensible daemon controlling a BeagleBone and attached devices
 - controlling RGB-LED stripes via PWM signals
 
 ## Requirements
+    msgpack-python==0.3.0
     requests==1.2.3
 
 ## License
