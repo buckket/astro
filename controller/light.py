@@ -67,17 +67,17 @@ class LightController(threading.Thread):
 
     def execute_task(self, command, args, answer):
         if command == 'set_color':
-            self.logger.info('Setting color to: R: %s G: %s B: %s' % args['color'])
+            self.logger.info('Setting color (R: %s G: %s B: %s)' % args['color'])
             self.set_color(args['color'])
             answer(0)
 
         elif command == 'get_color':
             color = self.get_color()
-            self.logger.info('Reading current color: R: %s G: %s B: %s' % color)
+            self.logger.info('Reading current color (R: %s G: %s B: %s)' % color)
             answer(0, color)
 
         elif command == 'fade':
-            self.logger.info('Fading color to: R: %s G: %s B: %s' % args['color'])
+            self.logger.info('Fading color (R: %s G: %s B: %s)' % args['color'])
             self.fade(args['color'])
             answer(0)
 

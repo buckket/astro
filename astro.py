@@ -3,9 +3,12 @@
 import SocketServer
 
 import logging
-import pickle
+import msgpack
 
 from ConfigParser import SafeConfigParser
+
+from logger import setup_logger
+from config import setup_config
 
 from controller.temp import TempController
 from controller.radio import RadioController
@@ -20,9 +23,9 @@ class UDPHandler(SocketServer.BaseRequestHandler):
 
         data = None
         try:
-            data = pickle.loads(raw_data)
-        except (pickle.UnpicklingError, AttributeError, EOFError, ImportError, IndexError):
-            logger.error('UnpicklingError (%s)', self.client_address[0])
+            data = msgpack.unpackb(raw_data)
+        except (msgpack.exceptions.UnpackException, AttributeError, EOFError, ImportError, IndexError):
+            logger.error('UnpackingError (%s)', self.client_address[0])
 
         if data:
 
@@ -37,7 +40,7 @@ class UDPHandler(SocketServer.BaseRequestHandler):
                 def answer(code=0, message=None):
                     data = {'code': code, 'message': message, 'uuid': uuid, 'key': key}
                     logger.debug('Answering %s: %s', self.client_address, data)
-                    socket.sendto(pickle.dumps(data) + '\n', self.client_address)
+                    socket.sendto(msgpack.packb(data) + '\n', self.client_address)
 
                 logger.info('Received command from %s: (%s, %s)', self.client_address[0], task, command)
                 logger.debug('task: %s, command: %s,  args: %s', task, command, args)
@@ -56,30 +59,6 @@ class UDPHandler(SocketServer.BaseRequestHandler):
 
             else:
                 logger.warn('Received command from %s with invalid key', self.client_address[0])
-
-
-def setup_logger():
-    logger = logging.getLogger('astro')
-    logger.setLevel(logging.DEBUG)
-
-    fh = logging.FileHandler('astro.log')
-    fh.setLevel(logging.DEBUG)
-
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-
-    formatter = logging.Formatter('%(asctime)s : %(name)-11s : %(levelname)-8s : %(message)s')
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-
-    logger.addHandler(fh)
-    logger.addHandler(ch)
-    return logger
-
-def setup_config():
-    parser = SafeConfigParser()
-    parser.read('astro.cfg')
-    return parser
 
 
 if __name__ == "__main__":
