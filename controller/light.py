@@ -1,28 +1,20 @@
-import threading
-import Queue
-
 import logging
-
 import time
 
+from .base import BaseController
 
-class LightController(threading.Thread):
+
+class LightController(BaseController):
 
     def __init__(self, red, green, blue, frequency):
-        threading.Thread.__init__(self)
+        super(LightController, self).__init__()
 
         self.logger = logging.getLogger('astro.light')
-
-        self.stop_requested = False
-        self.queue = Queue.Queue()
 
         self.red = red
         self.green = green
         self.blue = blue
         self.frequency = frequency
-
-    def shutdown(self):
-        self.stop_requested = True
 
     def get_color(self):
         def get_duty(color):
@@ -89,13 +81,3 @@ class LightController(threading.Thread):
         else:
             self.logger.warn('invalid command: %s', command)
             answer(1, 'invalid command')
-
-    def run(self):
-        while not self.stop_requested:
-            try:
-                ((command, args), answer) = self.queue.get(block=True, timeout=1.0)
-                self.execute_task(command, args, answer)
-                self.queue.task_done()
-            except Queue.Empty:
-                continue
-        self.logger.debug('Received stop_requested')

@@ -1,23 +1,18 @@
-import threading
-import Queue
-
 import logging
-
 import requests
 import json
 
+from .base import BaseController
 
-class TempController(threading.Thread):
+
+class TempController(BaseController):
 
     def __init__(self, w1_device=None, xivley=None, period=60.0):
-        threading.Thread.__init__(self)
+        super(TempController, self).__init__()
 
         self.logger = logging.getLogger('astro.temp')
         requests_log = logging.getLogger('requests')
         requests_log.setLevel(logging.WARNING)
-
-        self.stop_requested = False
-        self.queue = Queue.Queue()
 
         self.w1_device = w1_device
         self.xivley = xivley
@@ -25,9 +20,6 @@ class TempController(threading.Thread):
 
         self.timer = None
         self.temp = 0
-
-    def shutdown(self):
-        self.stop_requested = True
 
     def read_temp(self):
         try:
@@ -82,12 +74,5 @@ class TempController(threading.Thread):
 
     def run(self):
         self.periodic_task()
-        while not self.stop_requested:
-            try:
-                ((command, args), answer) = self.queue.get(block=True, timeout=1.0)
-                self.execute_task(command, args, answer)
-                self.queue.task_done()
-            except Queue.Empty:
-                continue
+        super(TempController, self).run()
         self.timer.cancel()
-        self.logger.debug('Received stop_requested')
