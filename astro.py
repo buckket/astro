@@ -17,6 +17,10 @@ def main():
     logger.info('Reading configuration')
     cfg = setup_config()
 
+    if not cfg:
+        logger.error('Config file not found or not readable')
+        return
+
     logger.info('Initializing TempController')
     w1_device = cfg.get('temp', 'w1_device')
     xivley = {'apikey': cfg.get('temp', 'xivley_key'), 'url': cfg.get('temp', 'xivley_url')}
@@ -33,7 +37,7 @@ def main():
     frequency = cfg.getint('light', 'frequency')
     light = LightController(red=red, green=green, blue=blue, frequency=frequency)
 
-    logger.info('Initializing AstroUDPServer')
+    logger.info('Initializing UDPServer')
     host = cfg.get('network', 'host')
     port = cfg.getint('network', 'port')
     key = cfg.get('network', 'key')
