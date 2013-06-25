@@ -1,77 +1,21 @@
 #!/usr/bin/env python
 
-import SocketServer
+from astro.logger import setup_logger
+from astro.config import setup_config
 
-import logging
-import msgpack
+from astro.server import AstroUDPServer, AstroUDPHandler
 
-from ConfigParser import SafeConfigParser
-
-from logger import setup_logger
-from config import setup_config
-
-from controller.temp import TempController
-from controller.radio import RadioController
-from controller.light import LightController
+from astro.controller.temp import TempController
+from astro.controller.radio import RadioController
+from astro.controller.light import LightController
 
 
-class UDPHandler(SocketServer.BaseRequestHandler):
-
-    def handle(self):
-        raw_data = self.request[0].strip()
-        socket = self.request[1]
-
-        data = None
-        try:
-            data = msgpack.unpackb(raw_data)
-        except (msgpack.exceptions.UnpackException, AttributeError, EOFError, ImportError, IndexError):
-            logger.error('UnpackingError (%s)', self.client_address[0])
-
-        if data:
-
-            task = data.get('task', None)
-            command = data.get('command', None)
-            args = data.get('args', None)
-            uuid = data.get('uuid', None)
-            key = data.get('key', None)
-
-            if key ==  cfg.get('network', 'key'):
-
-                def answer(code=0, message=None):
-                    data = {'code': code, 'message': message, 'uuid': uuid, 'key': key}
-                    logger.debug('Answering %s: %s', self.client_address, data)
-                    socket.sendto(msgpack.packb(data) + '\n', self.client_address)
-
-                logger.info('Received command from %s: (%s, %s)', self.client_address[0], task, command)
-                logger.debug('task: %s, command: %s,  args: %s', task, command, args)
-
-                answer(0, 'data received')
-
-                if task == 'radio':
-                    radio.queue.put(((command, args), answer))
-                elif task == 'temp':
-                    temp.queue.put(((command, args), answer))
-                elif task == 'light':
-                    light.queue.put(((command, args), answer))
-                else:
-                    logger.warn('invalid task: %s', task)
-                    answer(1, 'invalid task')
-
-            else:
-                logger.warn('Received command from %s with invalid key', self.client_address[0])
-
-
-if __name__ == "__main__":
+def main():
     logger = setup_logger()
     logger.info('Astro is starting')
 
     logger.info('Reading configuration')
     cfg = setup_config()
-
-    host = cfg.get('network', 'host')
-    port = cfg.getint('network', 'port')
-    server = SocketServer.UDPServer((host, port), UDPHandler)
-    logger.info('Socket bound to %s:%i', host, port)
 
     logger.info('Initializing TempController')
     w1_device = cfg.get('temp', 'w1_device')
@@ -89,6 +33,13 @@ if __name__ == "__main__":
     frequency = cfg.getint('light', 'frequency')
     light = LightController(red=red, green=green, blue=blue, frequency=frequency)
 
+    logger.info('Initializing AstroUDPServer')
+    host = cfg.get('network', 'host')
+    port = cfg.getint('network', 'port')
+    key = cfg.get('network', 'key')
+    server = AstroUDPServer((host, port), AstroUDPHandler, key=key, temp=temp, radio=radio, light=light)
+    logger.info('Socket bound to %s:%i', host, port)
+
     try:
         logger.info('Starting TempController')
         temp.start()
@@ -105,3 +56,6 @@ if __name__ == "__main__":
         radio.shutdown()
         light.shutdown()
         server.shutdown()
+
+if __name__ == "__main__":
+    main()

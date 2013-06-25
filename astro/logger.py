@@ -11,7 +11,7 @@ def setup_logger():
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
 
-    formatter = logging.Formatter('%(asctime)s : %(name)-11s : %(levelname)-8s : %(message)s')
+    formatter = logging.Formatter('%(asctime)s : %(name)-12s : %(levelname)-8s : %(message)s')
     fh.setFormatter(formatter)
     ch.setFormatter(formatter)
 
