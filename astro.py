@@ -36,8 +36,10 @@ def main():
 
     logger.info('Initializing UDPServer')
     server_config = server_config_helper(cfg)
-    server = AstroUDPServer((server_config['host'], server_config['port']),
-        AstroUDPHandler, key=server_config['key'], temp=temp, radio=radio, light=light)
+    server = AstroUDPServer((server_config['host'], server_config['port']), AstroUDPHandler, key=server_config['key'])
+    server.add_handler(temp, 'temp')
+    server.add_handler(radio, 'radio')
+    server.add_handler(light, 'light')
     logger.info('Socket bound to %s:%i', server_config['host'], server_config['port'])
 
     try:

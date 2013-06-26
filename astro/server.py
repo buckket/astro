@@ -4,14 +4,16 @@ import logging
 
 
 class AstroUDPServer(SocketServer.UDPServer):
-    def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True, key=None, temp=None, radio=None, light=None):
+    def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True, key=None):
         SocketServer.UDPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate=True)
+
         self.key = key
-        self.temp = temp
-        self.radio = radio
-        self.light = light
+        self.handler = {}
 
         self.logger = logging.getLogger('astro.server')
+
+    def add_handler(self, ref, name):
+        self.handler['name'] = ref
 
 
 class AstroUDPHandler(SocketServer.BaseRequestHandler):
@@ -36,7 +38,7 @@ class AstroUDPHandler(SocketServer.BaseRequestHandler):
             uuid = data.get('uuid', None)
             key = data.get('key', None)
 
-            if key ==  secret_key:
+            if key == secret_key:
 
                 def answer(code=0, message=None):
                     data = {'code': code, 'message': message, 'uuid': uuid, 'key': key}
@@ -48,13 +50,9 @@ class AstroUDPHandler(SocketServer.BaseRequestHandler):
 
                 answer(0, 'data received')
 
-                if task == 'radio':
-                    self.server.radio.queue.put(((command, args), answer))
-                elif task == 'temp':
-                    self.server.temp.queue.put(((command, args), answer))
-                elif task == 'light':
-                    self.server.light.queue.put(((command, args), answer))
-                else:
+                try:
+                    self.server.handler[task].queue.put(((command, args), answer))
+                except KeyError:
                     logger.warn('invalid task: %s', task)
                     answer(1, 'invalid task')
 
