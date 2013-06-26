@@ -57,6 +57,15 @@ class LightController(BaseController):
             self.fade(color)
             self.fade(old_color)
 
+    def strobo(self):
+        old_color = self.get_color()
+        while self.queue.empty() and not self.stop_requested:
+            self.set_color([0, 0, 0])
+            time.sleep(0.15)
+            self.set_color([255, 255, 255])
+            time.sleep(0.04)
+        self.set_color(old_color)
+
     def execute_task(self, command, args, answer):
         if command == 'set_color':
             self.logger.info('Setting color (R: %s G: %s B: %s)' % args['color'])
@@ -76,6 +85,15 @@ class LightController(BaseController):
         elif command == 'flash':
             self.logger.info('Flashing lights')
             self.flash()
+            answer(0)
+
+        elif command == 'strobo':
+            self.logger.info('Entering strobo mode')
+            answer(0)
+            self.strobo()
+
+        elif command == 'stop':
+            self.logger.info('Stopping running mode')
             answer(0)
 
         else:

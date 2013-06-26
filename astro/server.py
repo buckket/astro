@@ -13,6 +13,7 @@ class AstroUDPServer(SocketServer.UDPServer):
         self.logger = logging.getLogger('astro.server')
 
     def add_handler(self, ref, name):
+        self.logger.info('Registered new handler: %s' % name)
         self.handler[name] = ref
 
 
