@@ -1,6 +1,8 @@
 import logging
 import time
 
+import Queue
+
 from .base import BaseController
 
 
@@ -15,6 +17,8 @@ class LightController(BaseController):
         self.green = green
         self.blue = blue
         self.frequency = frequency
+
+        self.mode = None
 
     def get_color(self):
         def get_duty(color):
@@ -58,6 +62,7 @@ class LightController(BaseController):
             self.fade(old_color)
 
     def strobo(self):
+        self.logger.info('Entering strobo mode')
         old_color = self.get_color()
         while self.queue.empty() and not self.stop_requested:
             self.set_color([0, 0, 0])
@@ -65,6 +70,7 @@ class LightController(BaseController):
             self.set_color([255, 255, 255])
             time.sleep(0.04)
         self.set_color(old_color)
+        self.logger.info('Stopping strobo mode')
 
     def execute_task(self, command, args, answer):
         if command == 'set_color':
@@ -88,14 +94,25 @@ class LightController(BaseController):
             answer(0)
 
         elif command == 'strobo':
-            self.logger.info('Entering strobo mode')
+            self.mode = self.strobo
             answer(0)
-            self.strobo()
 
         elif command == 'stop':
-            self.logger.info('Stopping running mode')
+            self.mode = None
             answer(0)
 
         else:
             self.logger.warn('invalid command: %s', command)
             answer(1, 'invalid command')
+
+    def run(self):
+        while not self.stop_requested:
+            try:
+                ((command, args), answer) = self.queue.get(block=True, timeout=1.0)
+                self.execute_task(command, args, answer)
+                self.queue.task_done()
+                if self.mode:
+                    self.mode()
+            except Queue.Empty:
+                continue
+        self.logger.debug('Received stop_requested')
