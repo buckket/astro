@@ -13,7 +13,7 @@ class AstroUDPServer(SocketServer.UDPServer):
         self.logger = logging.getLogger('astro.server')
 
     def add_handler(self, ref, name):
-        self.handler['name'] = ref
+        self.handler[name] = ref
 
 
 class AstroUDPHandler(SocketServer.BaseRequestHandler):
