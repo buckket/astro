@@ -1,6 +1,7 @@
 import SocketServer
-import msgpack
 import logging
+
+import msgpack
 
 
 class AstroUDPServer(SocketServer.UDPServer):
@@ -13,8 +14,11 @@ class AstroUDPServer(SocketServer.UDPServer):
         self.logger = logging.getLogger('astro.server')
 
     def add_handler(self, ref, name):
-        self.logger.info('Registered new handler: %s' % name)
-        self.handler[name] = ref
+        if name in self.handler:
+            self.logger.warn('%s is already a registered handler, skipping')
+        else:
+            self.handler[name] = ref
+            self.logger.info('Registered new handler: %s' % name)
 
 
 class AstroUDPHandler(SocketServer.BaseRequestHandler):
