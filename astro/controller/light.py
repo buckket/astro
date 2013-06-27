@@ -46,18 +46,18 @@ class LightController(BaseController):
         return ((color1[0]*weight+color2[0])/(1+weight), (color1[1]*weight+color2[1])/(1+weight), (color1[2]*weight+color2[2])/(1+weight))
 
     def fade(self, color, steps=50, sleep_time=0.0005):
-        for s in range(0,steps):
+        for s in range(0, steps):
             self.set_color(self.avg_color(self.get_color(), color, steps-s))
             time.sleep(sleep_time)
         self.set_color(color)
 
-    def flash(self):
+    def flash(self, count=1):
         old_color = self.get_color()
         if old_color == [0, 0, 0]:
             color = [255, 255, 255]
         else:
             color = [0, 0, 0]
-        for i in range(0, 1):
+        for i in range(0, count):
             self.fade(color)
             self.fade(old_color)
 
@@ -90,7 +90,10 @@ class LightController(BaseController):
 
         elif command == 'flash':
             self.logger.info('Flashing lights')
-            self.flash()
+            if 'count' in args:
+                self.flash(count=args['count'])
+            else:
+                self.flash()
             answer(0)
 
         elif command == 'strobo':
