@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 
-from astro.logger import setup_logger
+from astro.server.logger import setup_logger
 
-from astro.config import setup_config
-from astro.config import temp_config_helper
-from astro.config import light_config_helper
-from astro.config import server_config_helper
+from astro.server.config import setup_config
+from astro.server.config import temp_config_helper
+from astro.server.config import light_config_helper
+from astro.server.config import server_config_helper
 
-from astro.server import AstroUDPServer, AstroUDPHandler
+from astro.server.udp import AstroUDPServer, AstroUDPHandler
 
-from astro.controller.temp import TempController
-from astro.controller.radio import RadioController
-from astro.controller.light import LightController
+from astro.server.controller.temp import TempController
+from astro.server.controller.radio import RadioController
+from astro.server.controller.light import LightController
 
 
 def main():
