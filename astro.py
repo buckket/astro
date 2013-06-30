@@ -1,63 +1,48 @@
 #!/usr/bin/env python
 
-from astro.server.logger import setup_logger
+import argparse
 
-from astro.server.config import setup_config
-from astro.server.config import temp_config_helper
-from astro.server.config import light_config_helper
-from astro.server.config import server_config_helper
-
-from astro.server.udp import AstroUDPServer, AstroUDPHandler
-
-from astro.server.controller.temp import TempController
-from astro.server.controller.radio import RadioController
-from astro.server.controller.light import LightController
+from astro.server.main import AstroServer
+from astro.client.main import AstroClient
 
 
 def main():
-    logger = setup_logger()
-    logger.info('Astro is starting')
 
-    logger.info('Reading configuration')
-    cfg = setup_config()
+    parser = argparse.ArgumentParser(description='Schaltpult MK I')
+    parser.add_argument('-c', '--config',
+        type=argparse.FileType('r'),
+        dest='config_file',
+        default='astro.cfg')
 
-    if not cfg:
-        logger.error('Config file not found or not readable')
-        return
+    subparsers = parser.add_subparsers(dest='command')
 
-    logger.info('Initializing TempController')
-    temp = TempController(**temp_config_helper(cfg))
+    # SERVER
+    parser_server = subparsers.add_parser('server')
 
-    logger.info('Initializing RadioController')
-    radio = RadioController()
+    # TEMP
+    parser_temp = subparsers.add_parser('temp')
+    parser_temp.add_argument('command_temp', nargs='?', default='get_temp')
 
-    logger.info('Initializing LightController')
-    light = LightController(**light_config_helper(cfg))
+    # LIGHT
+    parser_light = subparsers.add_parser('light')
+    parser_light.add_argument('command_light')
+    parser_light.add_argument('r', type=int, nargs='?', default=0)
+    parser_light.add_argument('b', type=int, nargs='?', default=0)
+    parser_light.add_argument('g', type=int, nargs='?', default=0)
 
-    logger.info('Initializing UDPServer')
-    server_config = server_config_helper(cfg)
-    server = AstroUDPServer((server_config['host'], server_config['port']), AstroUDPHandler, key=server_config['key'])
-    server.add_handler(temp, 'temp')
-    server.add_handler(radio, 'radio')
-    server.add_handler(light, 'light')
-    logger.info('Socket bound to %s:%i', server_config['host'], server_config['port'])
+    # RADIO
+    parser_radio = subparsers.add_parser('radio')
+    parser_radio.add_argument('devices')
+    parser_radio.add_argument('status')
 
-    try:
-        logger.info('Starting TempController')
-        temp.start()
-        logger.info('Starting RadioController')
-        radio.start()
-        logger.info('Starting LightController')
-        light.start()
-        logger.info('Starting UDPServer')
-        server.serve_forever()
+    args = parser.parse_args()
 
-    except KeyboardInterrupt:
-        logger.info('Astro is shutting down, bye! <3')
-        temp.shutdown()
-        radio.shutdown()
-        light.shutdown()
-        server.shutdown()
+    if args.command == 'server':
+        server = AstroServer(config_file=args.config_file)
+        server.start()
+    elif args.command in ('temp', 'light', 'radio'):
+        client = AstroClient(config_file=args.config_file)
+        client.dispatch(args)
 
 if __name__ == "__main__":
     main()

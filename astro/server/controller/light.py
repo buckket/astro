@@ -29,7 +29,7 @@ class LightController(BaseController):
             except (IOError, ValueError):
                 self.logger.error('PWM error while getting values')
                 return 0
-        return [get_duty(self.red), get_duty(self.green), get_duty(self.blue)]
+        return (get_duty(self.red), get_duty(self.green), get_duty(self.blue))
 
     def set_color(self, color):
         def set_duty(color, value):
@@ -53,10 +53,10 @@ class LightController(BaseController):
 
     def flash(self, count=1):
         old_color = self.get_color()
-        if old_color == [0, 0, 0]:
-            color = [255, 255, 255]
+        if old_color == (0, 0, 0):
+            color = (255, 255, 255)
         else:
-            color = [0, 0, 0]
+            color = (0, 0, 0)
         for i in range(0, count):
             self.fade(color)
             self.fade(old_color)
@@ -65,9 +65,9 @@ class LightController(BaseController):
         self.logger.info('Entering strobo mode')
         old_color = self.get_color()
         while self.queue.empty() and not self.stop_requested:
-            self.set_color([0, 0, 0])
+            self.set_color((0, 0, 0))
             time.sleep(0.15)
-            self.set_color([255, 255, 255])
+            self.set_color((255, 255, 255))
             time.sleep(0.04)
         self.set_color(old_color)
         self.logger.info('Stopping strobo mode')
