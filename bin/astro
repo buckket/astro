@@ -10,7 +10,6 @@ def main():
 
     parser = argparse.ArgumentParser(description='Schaltpult MK I')
     parser.add_argument('-c', '--config',
-        type=argparse.FileType('r'),
         dest='config_file',
         default='astro.cfg')
 

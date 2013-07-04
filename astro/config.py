@@ -1,12 +1,12 @@
 from ConfigParser import SafeConfigParser
-
+import os
 
 def setup_config(config_file):
     config = SafeConfigParser()
-    try:
-        config.readfp(config_file)
-    except IOError:
-        return None
+    config_locations = []
+    config_locations.append(os.path.expanduser('~/.config/astro/config.cfg'))
+    config_locations.append(config_file)
+    cfg = config.read(config_locations)
     return config
 
 def server_config_helper(cfg):
