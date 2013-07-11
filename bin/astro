@@ -26,8 +26,8 @@ def main():
     parser_light = subparsers.add_parser('light')
     parser_light.add_argument('command_light')
     parser_light.add_argument('r', type=int, nargs='?', default=0)
-    parser_light.add_argument('b', type=int, nargs='?', default=0)
     parser_light.add_argument('g', type=int, nargs='?', default=0)
+    parser_light.add_argument('b', type=int, nargs='?', default=0)
 
     # RADIO
     parser_radio = subparsers.add_parser('radio')
